@@ -3,11 +3,17 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import BatchBarcodeGeneratorModal, { computeQrSheetLayout } from './BatchBarcodeGeneratorModal';
+import { serials as serialApi } from '../../../services/api';
+
+vi.mock('../../../services/api', () => ({
+  serials: { createGenuinityQR: vi.fn() },
+}));
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe('print-ready QR sheet layout', () => {
@@ -45,9 +51,16 @@ describe('print-ready QR sheet layout', () => {
   it('opens a vector-only, caption-free print sheet at exact paper and QR dimensions', async () => {
     const popupDocument = {
       write: vi.fn(),
+      open: vi.fn(),
       close: vi.fn(),
     };
     vi.spyOn(window, 'open').mockReturnValue({ document: popupDocument });
+    serialApi.createGenuinityQR.mockResolvedValue({
+      data: {
+        success: true,
+        serials: Array.from({ length: 200 }, (_, index) => `BV_PRODUCT_${String(index).padStart(11, '0')}`),
+      },
+    });
 
     render(
       <BatchBarcodeGeneratorModal
@@ -56,22 +69,29 @@ describe('print-ready QR sheet layout', () => {
         initialProduct={{ id: 1, sku: 'BV-PRODUCT', name: 'Test product' }}
       />,
     );
-    await waitFor(() => {
-      expect(document.querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
-    });
-    const qrDataUrl = document.querySelector('img').getAttribute('src');
-    const qrSvg = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
-    expect(qrSvg).toContain('width="8192"');
-    expect(qrSvg).toContain('shape-rendering="crispEdges"');
-    fireEvent.click(screen.getByRole('button', { name: /generate full-page hq pdf/i }));
+    fireEvent.change(screen.getByLabelText('Unique codes per selected product'), { target: { value: '200' } });
+    fireEvent.click(screen.getByRole('button', { name: /register unique codes and create pdf/i }));
+    await waitFor(() => expect(popupDocument.close).toHaveBeenCalledOnce());
 
-    const printHtml = popupDocument.write.mock.calls[0][0];
+    const printHtml = popupDocument.write.mock.calls[popupDocument.write.mock.calls.length - 1][0];
     expect(printHtml).toContain('@page { size: 210mm 297mm; margin: 0; }');
     expect(printHtml).toContain('grid-template-columns: repeat(10, 19mm)');
     expect(printHtml).toContain('grid-template-rows: repeat(14, 19mm)');
     expect(printHtml).toMatch(/<main class="qr-sheet">\s*<img src="data:image\/svg\+xml/);
+    expect((printHtml.match(/<main class="qr-sheet">/g) || []).length).toBe(2);
+    expect((printHtml.match(/<img src="data:image\/svg\+xml/g) || []).length).toBe(200);
+    const qrDataUrl = document.querySelector('img').getAttribute('src');
+    const qrSvg = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
+    expect(qrSvg).toContain('width="8192"');
+    expect(qrSvg).toContain('shape-rendering="crispEdges"');
     expect(printHtml).not.toContain('Test product');
     expect(printHtml).not.toContain('qr-caption');
-    expect(popupDocument.close).toHaveBeenCalledOnce();
+    expect(serialApi.createGenuinityQR).toHaveBeenCalledWith({
+      productId: 1,
+      count: 200,
+      batchNumber: undefined,
+      manufactureDate: undefined,
+      expiryDate: undefined,
+    });
   });
 });

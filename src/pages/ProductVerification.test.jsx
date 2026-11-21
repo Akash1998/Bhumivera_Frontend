@@ -46,28 +46,20 @@ describe('product authenticity and box gift verification', () => {
     scannerMock.callback = null;
   });
 
-  it('shows only a certificate returned as verified by the batch registry', async () => {
+  it('uses the exact serial registry and does not invent lab or COA claims', async () => {
     api.get.mockImplementation((path) => {
-      if (path.startsWith('/serials/batch-coa/')) {
+      if (path.startsWith('/serials/verify/')) {
         return Promise.resolve({
           data: {
             success: true,
             verified: true,
-            coa: {
-              productName: 'Test Product',
-              serial: 'BV-2601-UNIQUE',
-              batchCode: 'BV-2601-BATCH',
-              bottleSequence: 'Bottle 1 of 2',
-              calibratedPh: '5.2',
-              extractionTemp: '26°C',
-              microbiologicalAssay: 'Passed',
-              heavyMetals: 'Passed',
-              tamperCustody: 'Intact',
-              disclosedActives: 'Verified',
-              originLot: 'Test lot',
-              pressedDate: '2026-01-01',
-              remainingInBatch: 2,
-            },
+            isGenuine: true,
+            productName: 'Test Product',
+            serialNumber: 'BV_TEST_12345678901',
+            batchNumber: 'BATCH-1',
+            itemStatus: 'available',
+            expiryDate: '2028-01-01',
+            details: [{ label: 'Batch note', value: 'Recorded' }],
           },
         });
       }
@@ -76,12 +68,13 @@ describe('product authenticity and box gift verification', () => {
       });
     });
 
-    renderVerification('/verify?serial=BV-2601-UNIQUE');
+    renderVerification('/verify?serial=BV_TEST_12345678901');
 
-    await waitFor(() => expect(screen.getByText('Verified batch certificate of analysis')).toBeTruthy());
-    expect(screen.getAllByText('Test Product')).toHaveLength(2);
-    expect(screen.getByText('5.2')).toBeTruthy();
-    expect(api.get).toHaveBeenCalledWith('/serials/batch-coa/BV-2601-UNIQUE');
+    await waitFor(() => expect(screen.getByText('Serial found in product registry')).toBeTruthy());
+    expect(screen.getByText('Test Product')).toBeTruthy();
+    expect(screen.getByText('Recorded')).toBeTruthy();
+    expect(screen.queryByText(/assay|certificate of analysis/i)).toBeNull();
+    expect(api.get).toHaveBeenCalledWith('/serials/verify/BV_TEST_12345678901', { notify: false });
   });
 
   it('does not present an unregistered serial as an authentic certificate', async () => {
@@ -93,7 +86,29 @@ describe('product authenticity and box gift verification', () => {
 
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
     expect(screen.getByText('Serial number not found in the registry.')).toBeTruthy();
-    expect(screen.queryByText('Verified batch certificate of analysis')).toBeNull();
+    expect(screen.queryByText('Serial found in product registry')).toBeNull();
+  });
+
+  it('reads BV_ product deep links as serials instead of gift codes', async () => {
+    api.get.mockResolvedValue({
+      data: {
+        success: true,
+        verified: true,
+        isGenuine: true,
+        serialNumber: 'BV_LUX_CFW_12345678901',
+        productName: 'Charcoal Face Wash',
+        itemStatus: 'available',
+        details: [],
+      },
+    });
+
+    renderVerification('/verify?code=BV_LUX_CFW_12345678901');
+
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith(
+      '/serials/verify/BV_LUX_CFW_12345678901',
+      { notify: false },
+    ));
+    expect(screen.getByText('Charcoal Face Wash')).toBeTruthy();
   });
 
   it('reads a box QR with the camera decoder and checks gift eligibility', async () => {

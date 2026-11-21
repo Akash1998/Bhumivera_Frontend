@@ -10,18 +10,7 @@ import {
   Grid,
   Sliders,
 } from 'lucide-react';
-
-/**
- * Generates a compact, standalone product QR payload (BV-QR:<SKU>)
- * so mobile cameras can focus and decode in <10ms without dense URL modules.
- */
-export function buildStandaloneProductQr(sku, batchNo = '') {
-  const cleanSku = String(sku || 'BV-PRODUCT').trim().toUpperCase();
-  if (batchNo && String(batchNo).trim()) {
-    return `BV-QR:${cleanSku}:${String(batchNo).trim()}`;
-  }
-  return `BV-QR:${cleanSku}`;
-}
+import { serials as serialApi } from '../../../services/api';
 
 async function buildHighResolutionQr(payload) {
   const svg = await QRCode.toString(payload, {
@@ -91,19 +80,21 @@ export default function BatchBarcodeGeneratorModal({
   onClose,
   catalog = [],
   initialProduct = null,
+  initialBatch = '',
 }) {
   // Mode: 'all-products' (generate unique standalone QR for every product) | 'single-product'
   const [generationMode, setGenerationMode] = useState(initialProduct ? 'single-product' : 'all-products');
   const [selectedProductId, setSelectedProductId] = useState('');
-  const [customSku, setCustomSku] = useState('');
   const [paperSize, setPaperSize] = useState('a4');
   const [paperWidthMm, setPaperWidthMm] = useState('210');
   const [paperHeightMm, setPaperHeightMm] = useState('297');
+  const [codeCount, setCodeCount] = useState('1');
+  const [batchNumber, setBatchNumber] = useState(initialBatch || '');
+  const [generationBusy, setGenerationBusy] = useState(false);
 
   // Per-product selection & quantities for 'all-products' mode
   const [selectedProductMap, setSelectedProductMap] = useState({});
-  const [qrMapBySku, setQrMapBySku] = useState({});
-  const [singleQrDataUrl, setSingleQrDataUrl] = useState('');
+  const [generatedQrDataUrl, setGeneratedQrDataUrl] = useState('');
   const [qrGenerationError, setQrGenerationError] = useState('');
   // Initialize catalog selection
   useEffect(() => {
@@ -117,11 +108,11 @@ export default function BatchBarcodeGeneratorModal({
     } else if (initialProduct) {
       setGenerationMode('single-product');
       setSelectedProductId(String(initialProduct.id || initialProduct.metaId || ''));
-      setCustomSku(initialProduct.sku || '');
+      setBatchNumber(initialBatch || initialProduct.batchNo || '');
     } else if (catalog && catalog.length > 0) {
       const first = catalog[0];
       setSelectedProductId(String(first.id || first.metaId || ''));
-      setCustomSku(first.sku || '');
+      setBatchNumber(initialBatch || '');
     }
 
     // Initialize all non-bundle products (or first 6+ products) as selected for All-Products mode
@@ -135,70 +126,15 @@ export default function BatchBarcodeGeneratorModal({
       });
       setSelectedProductMap(nextMap);
     }
-  }, [isOpen, initialProduct, catalog]);
-
-  // Generate QR data URLs for all catalog products
-  useEffect(() => {
-    if (!isOpen || !catalog || catalog.length === 0) return;
-    let active = true;
-    setQrGenerationError('');
-
-    async function generateAllProductQrs() {
-      const entries = {};
-      try {
-        for (const item of catalog) {
-          const sku = String(item.sku || `SKU-${item.id}`).trim().toUpperCase();
-          const payload = buildStandaloneProductQr(sku);
-          const url = await buildHighResolutionQr(payload);
-          entries[sku] = { url, payload };
-        }
-        if (active) setQrMapBySku(entries);
-      } catch (error) {
-        if (active) {
-          setQrGenerationError(`Could not generate product QR codes: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }
-    }
-
-    generateAllProductQrs();
-    return () => {
-      active = false;
-    };
-  }, [isOpen, catalog]);
+  }, [isOpen, initialProduct, initialBatch, catalog]);
 
   // Handle changing product from dropdown in single-product mode
   const handleSelectProduct = prodId => {
     setSelectedProductId(prodId);
+    setGeneratedQrDataUrl('');
     const prod = catalog.find(p => String(p.id || p.metaId) === String(prodId));
-    if (prod) {
-      setCustomSku(prod.sku || '');
-    }
+    if (prod?.batchNo) setBatchNumber(prod.batchNo);
   };
-
-  const scannablePayload = useMemo(
-    () => buildStandaloneProductQr(customSku || 'BV-PRODUCT'),
-    [customSku],
-  );
-
-  useEffect(() => {
-    let active = true;
-    if (!scannablePayload) return;
-    setQrGenerationError('');
-
-    buildHighResolutionQr(scannablePayload)
-      .then(url => {
-        if (active) setSingleQrDataUrl(url);
-      })
-      .catch(error => {
-        if (active) {
-          setQrGenerationError(`Could not generate the QR code: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [scannablePayload]);
 
   // Selected products in All-Products mode
   const activeAllProducts = useMemo(() => {
@@ -209,16 +145,7 @@ export default function BatchBarcodeGeneratorModal({
     () => computeQrSheetLayout(paperWidthMm, paperHeightMm),
     [paperWidthMm, paperHeightMm],
   );
-  const qrAssetsReady = generationMode === 'all-products'
-    ? activeAllProducts.length > 0 && activeAllProducts.every(product => {
-      const sku = String(product.sku || `SKU-${product.id}`).trim().toUpperCase();
-      return Boolean(qrMapBySku[sku]?.url);
-    })
-    : Boolean(singleQrDataUrl);
-
   const previewProduct = generationMode === 'all-products' ? activeAllProducts[0] : null;
-  const previewSku = String(previewProduct?.sku || customSku || 'BV-PRODUCT').trim().toUpperCase();
-  const previewQr = previewProduct ? qrMapBySku[previewSku]?.url : singleQrDataUrl;
   const selectedQrProduct = previewProduct || catalog.find(product =>
     String(product.id || product.metaId || '') === String(selectedProductId)
   ) || initialProduct;
@@ -226,10 +153,15 @@ export default function BatchBarcodeGeneratorModal({
     ? getComboComponentProducts(selectedQrProduct, catalog)
     : [];
   const comboContents = getComboComponentLabels(selectedQrProduct, catalog).join(', ');
+  const generationProducts = generationMode === 'all-products'
+    ? activeAllProducts
+    : [catalog.find(product => String(product.id || product.metaId || '') === String(selectedProductId)) || initialProduct]
+      .filter(Boolean);
 
   if (!isOpen) return null;
 
   const handleToggleProductSelection = prod => {
+    setGeneratedQrDataUrl('');
     if (prod.isBundle) {
       const components = getComboComponentProducts(prod, catalog);
       if (components.length === 0) return;
@@ -254,105 +186,125 @@ export default function BatchBarcodeGeneratorModal({
     }));
   };
 
-  // Fill the selected sheet with plain QR artwork at its fixed physical size.
-  const buildStickerItemsToPrint = () => {
-    const totalCount = qrLayout.capacity;
-
-    if (generationMode === 'all-products' && activeAllProducts.length > 0) {
-      const stickers = [];
-      for (let i = 0; i < totalCount; i++) {
-        const prod = activeAllProducts[i % activeAllProducts.length];
-        const sku = String(prod.sku || `SKU-${prod.id}`).trim().toUpperCase();
-        const qrInfo = qrMapBySku[sku];
-        stickers.push({
-          qrDataUrl: qrInfo?.url || singleQrDataUrl,
-        });
-      }
-      return stickers;
-    }
-
-    // Single product mode: repeat the selected product's standalone QR totalCount times
-    return Array.from({ length: totalCount }, () => ({
-      qrDataUrl: singleQrDataUrl,
-    }));
-  };
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow pop-ups to print QR code sheets.');
+  const handlePrint = async () => {
+    const count = Number(codeCount);
+    if (!Number.isSafeInteger(count) || count < 1 || count > 500 || generationProducts.length === 0) {
+      setQrGenerationError('Choose at least one product and a code count between 1 and 500.');
       return;
     }
 
-    const stickers = buildStickerItemsToPrint();
-    const pages = [];
-    for (let i = 0; i < stickers.length; i += qrLayout.capacity) {
-      pages.push(stickers.slice(i, i + qrLayout.capacity));
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      setQrGenerationError('Pop-up blocked. Allow pop-ups to create the print-ready PDF.');
+      return;
     }
 
-    const sheetHtml = pages.map(pageItems => `
-      <main class="qr-sheet">
-        ${pageItems.map(st => `<img src="${st.qrDataUrl}" alt="" class="qr-img" />`).join('')}
-      </main>
-    `).join('');
+    setGenerationBusy(true);
+    setQrGenerationError('');
+    setGeneratedQrDataUrl('');
+    printWindow.document.write('<!DOCTYPE html><title>Creating QR codes</title><p>Registering unique bottle codes…</p>');
+    try {
+      const generatedCodes = [];
+      for (const product of generationProducts) {
+        const productId = Number(product.productId ?? product.id ?? product.metaId);
+        if (!Number.isSafeInteger(productId) || productId < 1) {
+          throw new Error(`Could not resolve a database product ID for ${product.name || 'a selected product'}.`);
+        }
+        const { data } = await serialApi.createGenuinityQR({
+          productId,
+          count,
+          batchNumber: String(product.batchNo || (generationMode === 'single-product' ? batchNumber : '') || '').trim() || undefined,
+          manufactureDate: product.manufactureDate,
+          expiryDate: product.expiryDate,
+        });
+        if (!data?.success || !Array.isArray(data.serials) || data.serials.length !== count) {
+          throw new Error(data?.message || `The registry did not return ${count} serials for ${product.name || 'the product'}.`);
+        }
+        generatedCodes.push(...data.serials);
+      }
 
-    const cssStyles = `
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; background: #fff; }
-        .qr-sheet {
-          width: ${qrLayout.pageWidthMm}mm;
-          height: ${qrLayout.pageHeightMm}mm;
-          padding: ${qrLayout.marginMm}mm;
-          page-break-after: always;
-          page-break-inside: avoid;
-          display: grid;
-          grid-template-columns: repeat(${qrLayout.cols}, ${qrLayout.qrSizeMm}mm);
-          grid-template-rows: repeat(${qrLayout.rows}, ${qrLayout.qrSizeMm}mm);
-          gap: ${qrLayout.gapMm}mm;
-          align-content: start;
-          justify-content: start;
-          overflow: hidden;
-        }
-        .qr-sheet:last-child {
-          page-break-after: auto;
-        }
-        .qr-img {
-          width: ${qrLayout.qrSizeMm}mm;
-          height: ${qrLayout.qrSizeMm}mm;
-          object-fit: contain;
-          shape-rendering: crispEdges;
-          display: block;
-        }
-        @media print {
-          @page { size: ${qrLayout.pageWidthMm}mm ${qrLayout.pageHeightMm}mm; margin: 0; }
-          html, body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+      if (
+        new Set(generatedCodes).size !== generatedCodes.length ||
+        generatedCodes.some(code => !/^BV_[A-Z0-9]+(?:_[A-Z0-9]+)*_\d{11}$/.test(code))
+      ) {
+        throw new Error('The registry returned duplicate or incorrectly formatted bottle codes. Nothing was printed.');
+      }
+
+      const stickers = await Promise.all(generatedCodes.map(async code => ({
+        qrDataUrl: await buildHighResolutionQr(code),
+      })));
+      if (stickers.length === 0) throw new Error('No registered serials were returned for printing.');
+      setGeneratedQrDataUrl(stickers[0].qrDataUrl);
+
+      const pages = [];
+      for (let i = 0; i < stickers.length; i += qrLayout.capacity) {
+        pages.push(stickers.slice(i, i + qrLayout.capacity));
+      }
+      const sheetHtml = pages.map(pageItems => `
+        <main class="qr-sheet">
+          ${pageItems.map(sticker => `<img src="${sticker.qrDataUrl}" alt="" class="qr-img" />`).join('')}
+        </main>
+      `).join('');
+      const cssStyles = `
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body { width: 100%; height: 100%; background: #fff; }
+          .qr-sheet {
+            width: ${qrLayout.pageWidthMm}mm;
+            height: ${qrLayout.pageHeightMm}mm;
+            padding: ${qrLayout.marginMm}mm;
+            page-break-after: always;
+            page-break-inside: avoid;
+            display: grid;
+            grid-template-columns: repeat(${qrLayout.cols}, ${qrLayout.qrSizeMm}mm);
+            grid-template-rows: repeat(${qrLayout.rows}, ${qrLayout.qrSizeMm}mm);
+            gap: ${qrLayout.gapMm}mm;
+            align-content: start;
+            justify-content: start;
+            overflow: hidden;
           }
-        }
-      </style>
-    `;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Bhumivera QR Sheet</title>
-          ${cssStyles}
-        </head>
-        <body>
-          ${sheetHtml}
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 800);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+          .qr-sheet:last-child { page-break-after: auto; }
+          .qr-img {
+            width: ${qrLayout.qrSizeMm}mm;
+            height: ${qrLayout.qrSizeMm}mm;
+            object-fit: contain;
+            shape-rendering: crispEdges;
+            display: block;
+          }
+          @media print {
+            @page { size: ${qrLayout.pageWidthMm}mm ${qrLayout.pageHeightMm}mm; margin: 0; }
+            html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      `;
+      printWindow.document.open();
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Bhumivera Registered Product QR Sheet</title>${cssStyles}</head>
+          <body>
+            ${sheetHtml}
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 800);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setQrGenerationError(message);
+      printWindow.document.open();
+      printWindow.document.write(`<!DOCTYPE html><title>QR generation failed</title><p>${message.replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      })[character])}</p>`);
+      printWindow.document.close();
+    } finally {
+      setGenerationBusy(false);
+    }
   };
 
   return (
@@ -374,7 +326,7 @@ export default function BatchBarcodeGeneratorModal({
                 </span>
               </div>
               <p className="text-xs text-slate-300">
-                Plain QR codes at exact print size. Choose A4, A3, or enter custom paper dimensions before generating a print-ready PDF.
+                Generate and register unique bottle serials first, then print plain 19 mm QR labels on A4, A3, or custom paper.
               </p>
             </div>
           </div>
@@ -391,7 +343,10 @@ export default function BatchBarcodeGeneratorModal({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setGenerationMode('all-products')}
+              onClick={() => {
+                setGenerationMode('all-products');
+                setGeneratedQrDataUrl('');
+              }}
               className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition border ${
                 generationMode === 'all-products'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md'
@@ -403,7 +358,10 @@ export default function BatchBarcodeGeneratorModal({
             <button
               type="button"
               disabled={Boolean(initialProduct?.isBundle)}
-              onClick={() => setGenerationMode('single-product')}
+              onClick={() => {
+                setGenerationMode('single-product');
+                setGeneratedQrDataUrl('');
+              }}
               className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition border disabled:cursor-not-allowed disabled:opacity-40 ${
                 generationMode === 'single-product'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md'
@@ -435,8 +393,8 @@ export default function BatchBarcodeGeneratorModal({
                   </p>
                 )}
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase text-emerald-300 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-emerald-400" /> Unique Standalone QR for Each Product ({activeAllProducts.length} Selected)
+                      <label className="text-xs font-black uppercase text-emerald-300 flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-emerald-400" /> Products for Unique Bottle Codes ({activeAllProducts.length} Selected)
                   </label>
                   <div className="flex items-center gap-2">
                     <button
@@ -477,9 +435,7 @@ export default function BatchBarcodeGeneratorModal({
                         Boolean(selectedProductMap[String(component.id || component.metaId || component.sku)])
                       )
                       : Boolean(selectedProductMap[key]);
-                    const sku = String(prod.sku || `SKU-${prod.id}`).toUpperCase();
                     const qrProduct = prod.isBundle ? componentProducts[0] : prod;
-                    const qrEntry = qrMapBySku[String(qrProduct?.sku || sku).toUpperCase()];
                     return (
                       <div
                         key={key}
@@ -496,17 +452,15 @@ export default function BatchBarcodeGeneratorModal({
                           onChange={() => {}}
                           className="w-4 h-4 rounded text-emerald-500 focus:ring-0"
                         />
-                        {qrEntry?.url ? (
-                          <img src={qrEntry.url} alt={sku} className="w-10 h-10 rounded bg-white p-0.5 shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded bg-slate-800 shrink-0" />
-                        )}
+                        <div className="w-10 h-10 rounded bg-slate-800 shrink-0 flex items-center justify-center">
+                          <QrCode className="w-5 h-5 text-emerald-300" />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-xs font-bold text-white truncate">{prod.name}</div>
                           <div className="text-[10px] font-mono text-emerald-300 truncate">
                             {prod.isBundle
-                              ? `Component QR labels (${componentProducts.length} existing products)`
-                              : `${qrEntry?.payload || `BV-QR:${sku}`}`}
+                              ? `Select component products (${componentProducts.length})`
+                              : `${qrProduct?.sku || 'No SKU'} · registered serial QR`}
                           </div>
                         </div>
                       </div>
@@ -534,20 +488,40 @@ export default function BatchBarcodeGeneratorModal({
                   </select>
                 </div>
 
-                <div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Product SKU (Unique ID)</label>
-                    <input
-                      type="text"
-                      value={customSku}
-                      onChange={e => setCustomSku(e.target.value)}
-                      className="w-full bg-[#071711] border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-mono font-bold text-emerald-300 focus:outline-none"
-                      placeholder="BV-LUX-CFW-01"
-                    />
-                  </div>
-                </div>
               </>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="qr-code-count" className="block text-[11px] font-black uppercase text-emerald-300 mb-1">
+                  Unique codes per selected product
+                </label>
+                <input
+                  id="qr-code-count"
+                  type="number"
+                  min="1"
+                  max="500"
+                  step="1"
+                  value={codeCount}
+                  onChange={event => setCodeCount(event.target.value)}
+                  className="w-full bg-[#071711] border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="qr-batch-number" className="block text-[11px] font-black uppercase text-emerald-300 mb-1">
+                  Batch number (single product)
+                </label>
+                <input
+                  id="qr-batch-number"
+                  type="text"
+                  value={batchNumber}
+                  onChange={event => setBatchNumber(event.target.value)}
+                  disabled={generationMode === 'all-products'}
+                  className="w-full bg-[#071711] border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:outline-none"
+                  placeholder={generationMode === 'all-products' ? 'Use each product batch' : 'Auto-generated if blank'}
+                />
+              </div>
+            </div>
 
             {/* Paper dimensions determine the full-page QR count. */}
             <div className="p-4 bg-[#071711] border border-emerald-500/40 rounded-xl space-y-3">
@@ -631,10 +605,10 @@ export default function BatchBarcodeGeneratorModal({
 
             <div className="bg-white text-black p-4 rounded-xl shadow-2xl border-2 border-emerald-500 w-full max-w-[260px] flex items-center justify-center">
               <div className="w-44 h-44 flex items-center justify-center p-1 bg-white">
-                {previewQr ? (
-                  <img src={previewQr} alt="" className="w-full h-full object-contain" />
+                {generatedQrDataUrl ? (
+                  <img src={generatedQrDataUrl} alt="" className="w-full h-full object-contain" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-mono">Generating QR...</div>
+                  <div className="w-full h-full flex items-center justify-center text-xs font-mono">Generate to preview</div>
                 )}
               </div>
             </div>
@@ -657,11 +631,11 @@ export default function BatchBarcodeGeneratorModal({
               <button
                 type="button"
                 onClick={handlePrint}
-                disabled={!qrAssetsReady}
-                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center justify-center gap-2"
+                disabled={generationBusy || generationProducts.length === 0 || !Number.isInteger(Number(codeCount)) || Number(codeCount) < 1 || Number(codeCount) > 500}
+                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Printer className="w-4 h-4" />
-                {qrAssetsReady ? 'Generate Full-page HQ PDF' : 'Generating QR Codes…'}
+                {generationBusy ? 'Registering and creating PDF…' : 'Register unique codes and create PDF'}
               </button>
               <button
                 type="button"

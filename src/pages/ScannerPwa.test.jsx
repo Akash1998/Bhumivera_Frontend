@@ -119,16 +119,7 @@ describe('fulfillment scanner PWA', () => {
     await screen.findByText(/Aloe Vera Soap: 1\/1 scanned\. Saved on this phone\./);
     expect(document.querySelector('video')).toBeTruthy();
     expect(scannerMock.scanLoops).toBe(firstLoop);
-    expect(api.post).toHaveBeenCalledWith(
-      '/inventory-software/fulfillment/pwa-scan',
-      expect.objectContaining({
-        orderId: 99,
-        orderItemId: 902,
-        scannedCode: 'SKU-2',
-        scanId: expect.any(String),
-      }),
-      expect.objectContaining({ headers: { Authorization: 'Bearer staff-token' } }),
-    );
+    expect(api.post.mock.calls.some(([path]) => path.endsWith('/fulfillment/pwa-scan'))).toBe(false);
     expect(localStorage.getItem('BV_SCANNER_ACTIVE_ORDER_sample')).toContain('"SKU-2"');
 
     scannerMock.onResult('SKU-1');
@@ -153,6 +144,46 @@ describe('fulfillment scanner PWA', () => {
       }),
       expect.objectContaining({ headers: { Authorization: 'Bearer staff-token' } }),
     );
+  });
+
+  it('matches full bottle serials locally and rejects rescans after restoring local progress', async () => {
+    api.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        order: {
+          id: 99,
+          orderNumber: 'ORD-99',
+          status: 'confirmed',
+          items: [{ orderItemId: 901, name: 'Charcoal Face Wash', sku: 'BV-LUX-CFW-01', quantity: 2 }],
+        },
+      },
+    });
+
+    const firstRender = render(<ScannerPwa />);
+    await signInAndStartWork();
+    fireEvent.change(screen.getByPlaceholderText('Order number'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Load' }));
+    await screen.findByText(/Order #ORD-99 loaded/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
+    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
+    scannerMock.onResult('BV_LUX_CFW_12345678901');
+    await screen.findByText(/Charcoal Face Wash: 1\/2 scanned/);
+    expect(localStorage.getItem('BV_SCANNER_ACTIVE_ORDER_sample')).toContain('"BV_LUX_CFW_12345678901"');
+    expect(api.post.mock.calls.some(([path]) => path.endsWith('/fulfillment/pwa-scan'))).toBe(false);
+
+    firstRender.unmount();
+    render(<ScannerPwa />);
+    await screen.findByRole('button', { name: /Go to Work/ });
+    fireEvent.click(screen.getByRole('button', { name: /Go to Work/ }));
+    await screen.findByRole('button', { name: 'Scan Now' });
+    scannerMock.onResult = null;
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
+    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
+    scannerMock.onResult('BV_LUX_CFW_12345678901');
+    await screen.findByText(/bottle QR was already scanned/i);
+    scannerMock.onResult('BV_LUX_CFW_98765432109');
+    await screen.findByText(/Charcoal Face Wash: 2\/2 scanned/);
+    expect(api.post.mock.calls.some(([path]) => path.endsWith('/fulfillment/pwa-scan'))).toBe(false);
   });
 
   it('loads an order manifest by order ID from Inventory Software', async () => {
@@ -217,17 +248,11 @@ describe('fulfillment scanner PWA', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
     expect(screen.getByText(/no combo QR is needed/i)).toBeTruthy();
-    for (const [index, sku] of ['SKU-1', 'SKU-2', 'SKU-3', 'SKU-4'].entries()) {
+    for (const sku of ['SKU-1', 'SKU-2', 'SKU-3', 'SKU-4']) {
       scannerMock.onResult(`BV-QR:${sku}`);
       await screen.findByText(new RegExp(`1/1 scanned\\. Saved on this phone\\.`));
-      expect(api.post).toHaveBeenCalledWith(
-        '/inventory-software/fulfillment/pwa-scan',
-        expect.objectContaining({ orderItemId: 901 + index, scannedCode: sku }),
-        expect.anything(),
-      );
     }
-    expect(api.post.mock.calls.filter(([path]) => path.endsWith('/fulfillment/pwa-scan')).map(([, payload]) => payload.orderItemId))
-      .toEqual([901, 902, 903, 904]);
+    expect(api.post.mock.calls.some(([path]) => path.endsWith('/fulfillment/pwa-scan'))).toBe(false);
   });
 
   it('groups duplicate products, accepts out-of-order scans, and uses one scanner action', async () => {
@@ -273,7 +298,7 @@ describe('fulfillment scanner PWA', () => {
     const recordedScans = api.post.mock.calls
       .filter(([path]) => path.endsWith('/fulfillment/pwa-scan'))
       .map(([, payload]) => payload.orderItemId);
-    expect(recordedScans).toEqual([903, 901, 902, 902]);
+    expect(recordedScans).toEqual([]);
   });
 
   it('continues to read previously printed fulfillment QR codes', async () => {

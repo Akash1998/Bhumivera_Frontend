@@ -211,7 +211,7 @@ export default function PremiumHome() {
                 <span className="font-headline-silver">&amp; QR Certificate</span>
               </h2>
               <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
-                Received a Bhumivera package? Every genuine bottle features a unique serial number and QR code. Scan the QR code on your product box with your phone or enter your serial number manually to inspect verified lab assay details.
+                Received a Bhumivera package? Scan the unique bottle QR code or enter its full serial to check its exact registration, product, batch, and status.
               </p>
             </div>
             <Link
