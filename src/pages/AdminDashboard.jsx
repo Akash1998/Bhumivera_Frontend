@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
   Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, Settings2,
-  QrCode, ShieldCheck, ShoppingCart, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
+  ShieldCheck, ShoppingCart, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { COMPLETE_SITE_NAVIGATION_DIRECTORY } from '../utils/aiCopilotBus';
@@ -14,7 +14,6 @@ const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
 const SystemHealth = lazy(() => import('./admin/SystemHealth'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const ProductManagement = lazy(() => import('./admin/ProductManagement'));
-const StandaloneQrGenerator = lazy(() => import('./admin/StandaloneQrGenerator'));
 const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
 const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
@@ -86,7 +85,6 @@ const TAB_COMPONENTS = {
   'system-health': SystemHealth,
   'system-logs': SystemLogs,
   products: ProductManagement,
-  'standalone-qr': StandaloneQrGenerator,
   categories: CategoryManagement,
   'scarcity-simulator': ScarcitySimulator,
   users: UserManagement,
@@ -123,7 +121,6 @@ const TAB_ICONS = {
   notifications: Bell,
   impact: Leaf,
   products: Package,
-  'standalone-qr': QrCode,
   categories: Boxes,
   'scarcity-simulator': Activity,
   'referral-engine': Users,
@@ -172,7 +169,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (tab === 'authenticity') {
-      navigate('/admin/dashboard/standalone-qr', { replace: true });
+      navigate('/inventorysoftware?view=inv', { replace: true });
     }
   }, [tab, navigate]);
 
@@ -219,7 +216,6 @@ export default function AdminDashboard() {
       title: 'Products & Catalog',
       items: [
         { id: 'products', label: 'Product catalog' },
-        { id: 'standalone-qr', label: 'Standalone authenticity QR codes' },
         { id: 'categories', label: 'Categories' },
         { id: 'scarcity-simulator', label: 'Stock pacing' },
         { id: 'reviews', label: 'Reviews & Moderation' },
