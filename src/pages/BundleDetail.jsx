@@ -57,9 +57,14 @@ export default function BundleDetail() {
   const [isGalleryZoomed, setIsGalleryZoomed] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [lightboxPan, setLightboxPan] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState('overview');
   const [purchaseButtonVisible, setPurchaseButtonVisible] = useState(true);
   const addToBagButtonRef = useRef(null);
+  const lightboxStageRef = useRef(null);
+  const lightboxImageRef = useRef(null);
+  const lightboxPointersRef = useRef(new Map());
+  const lightboxGestureRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -149,6 +154,140 @@ export default function BundleDetail() {
     setActiveImageIndex(index => (index + direction + comboImages.length) % comboImages.length);
     setIsGalleryZoomed(false);
     setLightboxZoom(1);
+    setLightboxPan({ x: 0, y: 0 });
+  };
+
+  const clampLightboxPan = (zoom, x, y) => {
+    const stage = lightboxStageRef.current;
+    const image = lightboxImageRef.current;
+    if (!stage || !image) return { x, y };
+    const maxX = Math.max(0, (image.clientWidth * zoom - stage.clientWidth) / 2);
+    const maxY = Math.max(0, (image.clientHeight * zoom - stage.clientHeight) / 2);
+    return {
+      x: Math.max(-maxX, Math.min(maxX, x)),
+      y: Math.max(-maxY, Math.min(maxY, y)),
+    };
+  };
+
+  const zoomLightboxAt = (zoom, clientX, clientY) => {
+    const nextZoom = Math.max(1, Math.min(4, zoom));
+    if (nextZoom === 1) {
+      setLightboxZoom(1);
+      setLightboxPan({ x: 0, y: 0 });
+      return;
+    }
+    const stage = lightboxStageRef.current;
+    if (stage) {
+      const bounds = stage.getBoundingClientRect();
+      const anchorX = clientX - bounds.left - bounds.width / 2;
+      const anchorY = clientY - bounds.top - bounds.height / 2;
+      const imageX = (anchorX - lightboxPan.x) / lightboxZoom;
+      const imageY = (anchorY - lightboxPan.y) / lightboxZoom;
+      setLightboxPan(clampLightboxPan(
+        nextZoom,
+        anchorX - imageX * nextZoom,
+        anchorY - imageY * nextZoom,
+      ));
+    }
+    setLightboxZoom(nextZoom);
+  };
+
+  const zoomLightboxToCenter = zoom => {
+    const bounds = lightboxStageRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    zoomLightboxAt(zoom, bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+  };
+
+  const getLightboxPointerCenter = pointers => {
+    const points = Array.from(pointers.values());
+    const first = points[0];
+    const second = points[1] || first;
+    return {
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2,
+      distance: Math.hypot(second.x - first.x, second.y - first.y),
+    };
+  };
+
+  const handleLightboxPointerDown = event => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    lightboxPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const center = getLightboxPointerCenter(lightboxPointersRef.current);
+    const stage = lightboxStageRef.current;
+    const bounds = stage.getBoundingClientRect();
+    lightboxGestureRef.current = {
+      mode: lightboxPointersRef.current.size > 1 ? 'pinch' : 'pan',
+      x: event.clientX,
+      y: event.clientY,
+      zoom: lightboxZoom,
+      pan: lightboxPan,
+      centerX: center.x - bounds.left - bounds.width / 2,
+      centerY: center.y - bounds.top - bounds.height / 2,
+      distance: center.distance,
+    };
+  };
+
+  const handleLightboxPointerMove = event => {
+    if (!lightboxPointersRef.current.has(event.pointerId)) return;
+    event.preventDefault();
+    lightboxPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const gesture = lightboxGestureRef.current;
+    if (!gesture) return;
+
+    if (lightboxPointersRef.current.size > 1) {
+      const center = getLightboxPointerCenter(lightboxPointersRef.current);
+      const stage = lightboxStageRef.current;
+      const bounds = stage.getBoundingClientRect();
+      const zoom = Math.max(1, Math.min(4, gesture.zoom * center.distance / Math.max(1, gesture.distance)));
+      const anchorX = gesture.centerX;
+      const anchorY = gesture.centerY;
+      const imageX = (anchorX - gesture.pan.x) / gesture.zoom;
+      const imageY = (anchorY - gesture.pan.y) / gesture.zoom;
+      const nextPan = clampLightboxPan(
+        zoom,
+        center.x - bounds.left - bounds.width / 2 - imageX * zoom,
+        center.y - bounds.top - bounds.height / 2 - imageY * zoom,
+      );
+      setLightboxZoom(zoom);
+      setLightboxPan(nextPan);
+      return;
+    }
+
+    if (gesture.zoom > 1) {
+      const nextPan = clampLightboxPan(
+        gesture.zoom,
+        gesture.pan.x + event.clientX - gesture.x,
+        gesture.pan.y + event.clientY - gesture.y,
+      );
+      setLightboxPan(nextPan);
+    }
+  };
+
+  const handleLightboxPointerUp = event => {
+    lightboxPointersRef.current.delete(event.pointerId);
+    if (!lightboxPointersRef.current.size) {
+      lightboxGestureRef.current = null;
+      return;
+    }
+    const [remaining] = lightboxPointersRef.current.values();
+    const stage = lightboxStageRef.current;
+    const bounds = stage.getBoundingClientRect();
+    lightboxGestureRef.current = {
+      mode: 'pan',
+      x: remaining.x,
+      y: remaining.y,
+      zoom: lightboxZoom,
+      pan: lightboxPan,
+      centerX: remaining.x - bounds.left - bounds.width / 2,
+      centerY: remaining.y - bounds.top - bounds.height / 2,
+      distance: 0,
+    };
+  };
+
+  const handleLightboxWheel = event => {
+    event.preventDefault();
+    zoomLightboxAt(lightboxZoom * (event.deltaY < 0 ? 1.15 : 1 / 1.15), event.clientX, event.clientY);
   };
 
   useEffect(() => {
@@ -156,6 +295,7 @@ export default function BundleDetail() {
     setIsGalleryZoomed(false);
     setIsLightboxOpen(false);
     setLightboxZoom(1);
+    setLightboxPan({ x: 0, y: 0 });
     setActiveTab('overview');
   }, [slug]);
 
@@ -169,6 +309,7 @@ export default function BundleDetail() {
         const direction = event.key === 'ArrowLeft' ? -1 : 1;
         setActiveImageIndex(index => (index + direction + comboImages.length) % comboImages.length);
         setLightboxZoom(1);
+        setLightboxPan({ x: 0, y: 0 });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -642,24 +783,41 @@ export default function BundleDetail() {
                 <button type="button" onClick={event => { event.stopPropagation(); showAdjacentImage(1); }} aria-label="Next combo image" className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#d4af37]/35 bg-[#102219]/90 p-3 text-[#f4d98a] transition hover:bg-[#1c382b] sm:right-7"><ChevronRight size={22} /></button>
               </>
             )}
-            <Motion.img
-              key={activeImageUrl}
-              src={activeImageUrl}
-              alt={`${catalogProduct.name} enlarged`}
-              onClick={event => {
+            <div
+              ref={lightboxStageRef}
+              className="absolute inset-x-14 bottom-20 top-16 z-[1] touch-none cursor-grab active:cursor-grabbing sm:inset-x-24 sm:bottom-24 sm:top-20"
+              onClick={event => event.stopPropagation()}
+              onDoubleClick={event => {
                 event.stopPropagation();
-                setLightboxZoom(value => value === 1 ? 1.6 : 1);
+                zoomLightboxAt(lightboxZoom === 1 ? 2 : 1, event.clientX, event.clientY);
               }}
-              className="absolute left-1/2 top-1/2 max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 cursor-zoom-in select-none object-contain"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: lightboxZoom }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            />
+              onPointerDown={handleLightboxPointerDown}
+              onPointerMove={handleLightboxPointerMove}
+              onPointerUp={handleLightboxPointerUp}
+              onPointerCancel={handleLightboxPointerUp}
+              onWheel={handleLightboxWheel}
+            >
+              <Motion.img
+                key={activeImageUrl}
+                ref={lightboxImageRef}
+                src={activeImageUrl}
+                alt={`${catalogProduct.name} enlarged`}
+                draggable="false"
+                style={{
+                  transform: `translate(calc(-50% + ${lightboxPan.x}px), calc(-50% + ${lightboxPan.y}px)) scale(${lightboxZoom})`,
+                  transformOrigin: 'center center',
+                }}
+                className="absolute left-1/2 top-1/2 max-h-full max-w-full select-none object-contain"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
             <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-[#102219]/95 p-1.5 shadow-xl">
-              <button type="button" onClick={event => { event.stopPropagation(); setLightboxZoom(value => Math.max(1, Number((value - 0.25).toFixed(2)))); }} aria-label="Zoom out" disabled={lightboxZoom <= 1} className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40">−</button>
-              <button type="button" onClick={event => { event.stopPropagation(); setLightboxZoom(1); }} aria-label="Reset image zoom" className="min-w-16 px-2 font-mono text-[9px] font-bold uppercase tracking-wider text-[#c5d0c8]">{lightboxZoom === 1 ? 'Fit' : `${Math.round(lightboxZoom * 100)}%`}</button>
-              <button type="button" onClick={event => { event.stopPropagation(); setLightboxZoom(value => Math.min(2.5, Number((value + 0.25).toFixed(2)))); }} aria-label="Zoom in" disabled={lightboxZoom >= 2.5} className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40">+</button>
+              <button type="button" onClick={event => { event.stopPropagation(); zoomLightboxToCenter(lightboxZoom - 0.25); }} aria-label="Zoom out" disabled={lightboxZoom <= 1} className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40">−</button>
+              <button type="button" onClick={event => { event.stopPropagation(); zoomLightboxToCenter(1); }} aria-label="Reset image zoom" className="min-w-16 px-2 font-mono text-[9px] font-bold uppercase tracking-wider text-[#c5d0c8]">{lightboxZoom === 1 ? 'Fit' : `${Math.round(lightboxZoom * 100)}%`}</button>
+              <button type="button" onClick={event => { event.stopPropagation(); zoomLightboxToCenter(lightboxZoom + 0.25); }} aria-label="Zoom in" disabled={lightboxZoom >= 4} className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40">+</button>
             </div>
           </Motion.div>
         )}
