@@ -19,6 +19,7 @@ import WavePicklistModal from '../components/inventory/modals/WavePicklistModal'
 import ManifestPrintModal from '../components/inventory/modals/ManifestPrintModal';
 import FulfillmentOrderQrModal from '../components/inventory/modals/FulfillmentOrderQrModal';
 import ReturnQcModal from '../components/inventory/modals/ReturnQcModal';
+import BatchBarcodeGeneratorModal from '../components/inventory/modals/BatchBarcodeGeneratorModal';
 import {
   Activity,
   AlertTriangle,
@@ -52,6 +53,7 @@ import {
   PackagePlus,
   Plus,
   Printer,
+  QrCode,
   Receipt,
   RefreshCw,
   RotateCcw,
@@ -207,6 +209,8 @@ export default function InventorySoftware() {
   const [rtoReason, setRtoReason] = useState('Customer Unavailable / Door Locked — Courier Return to Origin (RTO)');
   // Order locks are displayed in fulfillment; retail billing remains manual and independent.
   const [orderLocks, setOrderLocks] = useState([]);
+  const [batchQrProduct, setBatchQrProduct] = useState(null);
+  const [batchQrBatch, setBatchQrBatch] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
   const [posCustomerForm, setPosCustomerForm] = useState({
     name: 'Walk-in Retail Shopper',
@@ -596,6 +600,12 @@ export default function InventorySoftware() {
       );
     });
   }, [onlineOrders, rtoSearch]);
+
+  const handleOpenBatchQrModal = (prod = null, batch = '') => {
+    setBatchQrProduct(prod);
+    setBatchQrBatch(batch);
+    setActiveModal('batch-qr');
+  };
 
   // ==========================================================================
   // HANDLERS: AUTHENTICATION & SECURITY ONBOARDING
@@ -1993,6 +2003,16 @@ export default function InventorySoftware() {
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
+              onClick={() => handleOpenBatchQrModal()}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+              title="Generate & Print Batch Barcodes / QR Stickers"
+            >
+              <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+              Batch QR Studio
+            </button>
+
+            <button
+              type="button"
               onClick={() => fetchBootstrapData()}
               className="px-3 py-2 rounded-xl bg-[#0c261b] hover:bg-[#133827] text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
             >
@@ -2098,6 +2118,7 @@ export default function InventorySoftware() {
             <CatalogStockView
               items={items}
               velocityData={velocityData}
+              onGenerateBatchQr={(item) => handleOpenBatchQrModal(item)}
               onEditItem={(item) => {
                 setEditingItem(item || {
                   name: '',
@@ -3385,6 +3406,20 @@ export default function InventorySoftware() {
             await fetchBootstrapData(true);
           }}
           reqConfig={reqConfig}
+        />
+      )}
+
+      {activeModal === 'batch-qr' && (
+        <BatchBarcodeGeneratorModal
+          isOpen={true}
+          onClose={() => {
+            setActiveModal(null);
+            setBatchQrProduct(null);
+            setBatchQrBatch('');
+          }}
+          catalog={items}
+          initialProduct={batchQrProduct}
+          initialBatch={batchQrBatch}
         />
       )}
 
