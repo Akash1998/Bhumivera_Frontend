@@ -61,6 +61,7 @@ describe('regimen bundle catalog resolution', () => {
           slug: 'admin-created-combo',
           sku: 'CUSTOM-COMBO-01',
           description: 'Current combo description',
+          image_url: 'products/creators-combo.webp',
           quantity: 12,
           status: 'active',
           price: 300,
@@ -82,6 +83,8 @@ describe('regimen bundle catalog resolution', () => {
 
     expect(products.getBySlug).toHaveBeenCalledWith('admin-created-combo');
     expect(screen.getByRole('heading', { name: 'Admin-created combo' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Admin-created combo' }).getAttribute('src'))
+      .toMatch(/\/products\/creators-combo\.webp$/);
     expect(screen.getByText('Current Product Name')).toBeTruthy();
     expect(screen.getByText('₹250')).toBeTruthy();
     expect(screen.getByText('₹80')).toBeTruthy();

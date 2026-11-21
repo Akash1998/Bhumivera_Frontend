@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star
 import SEO from '../components/SEO';
 import { products as productsApi, reviews as reviewsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 import {
   getComboPrice,
   isComboProduct,
@@ -13,6 +14,12 @@ import {
 const money = value => Number(value || 0).toLocaleString('en-IN', {
   maximumFractionDigits: 2,
 });
+
+const getComboImageUrl = product => [
+  product?.image_url,
+  product?.images,
+  product?.image,
+].map(getProductImageUrl).find(Boolean) || null;
 
 export default function BundleDetail() {
   const { slug } = useParams();
@@ -102,6 +109,7 @@ export default function BundleDetail() {
   }, [comboReviews, ratingFilter]);
 
   const comboItems = resolveComboItems(catalogProduct, catalogProducts);
+  const comboImageUrl = getComboImageUrl(catalogProduct);
   const comboPrice = getComboPrice(catalogProduct);
   const regularPrice = Number(catalogProduct?.price) || 0;
   const availableStock = Math.max(0, Number(catalogProduct?.quantity) || 0);
@@ -154,6 +162,15 @@ export default function BundleDetail() {
 
         <section className="mt-6 grid gap-8 lg:grid-cols-[1fr_0.8fr]">
           <div className="rounded-3xl border border-[#D4AF37]/35 bg-[#102219] p-6 sm:p-10">
+            {comboImageUrl && (
+              <img
+                src={comboImageUrl}
+                alt={catalogProduct.name}
+                loading="eager"
+                decoding="async"
+                className="mb-6 aspect-[16/9] w-full rounded-2xl border border-[#D4AF37]/20 object-cover"
+              />
+            )}
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-[#D4AF37]/45 bg-[#D4AF37]/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
                 {catalogProduct.sku || 'Combo'}
