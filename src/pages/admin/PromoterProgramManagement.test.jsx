@@ -57,6 +57,7 @@ describe('PromoterProgramManagement', () => {
   it('saves creator promo discounts, usage limits, and notes without changing status', async () => {
     render(<PromoterProgramManagement />);
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Show details for Creator Name' }));
     fireEvent.change(await screen.findByLabelText('Customer promo discount %'), { target: { value: '18' } });
     fireEvent.change(await screen.findByLabelText('Contribution share %'), { target: { value: '30' } });
     fireEvent.change(screen.getByLabelText(/Total promo uses/), { target: { value: '25' } });
@@ -78,5 +79,37 @@ describe('PromoterProgramManagement', () => {
     });
     expect((await screen.findByRole('status')).textContent).toMatch(/promo settings saved/);
     expect(screen.getByText('approved', { selector: 'span' })).toBeTruthy();
+  });
+
+  it('shows creators in 20-row pages instead of one long expanded list', async () => {
+    const creators = Array.from({ length: 41 }, (_, index) => ({
+      id: index + 1,
+      status: 'approved',
+      user_name: `Creator ${index + 1}`,
+      user_email: `creator${index + 1}@example.com`,
+      social_platform: 'Instagram',
+      social_handle: `@creator${index + 1}`,
+      follower_count: 5000,
+      discount_percent: 12,
+      commission_share_percent: 20,
+      referral_code: `CREATOR${index + 1}`,
+      admin_notes: '',
+    }));
+    affiliate.getAdminPartners.mockResolvedValue({ data: { partners: creators } });
+
+    render(<PromoterProgramManagement />);
+
+    await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(20));
+    const firstPageRows = screen.getAllByRole('article').map(row => row.textContent);
+    expect(firstPageRows.some(text => text.includes('Creator 1 · Instagram'))).toBe(true);
+    expect(firstPageRows.some(text => text.includes('Creator 21 · Instagram'))).toBe(false);
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Next creator page' })[0]);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('article')).toHaveLength(20);
+      expect(screen.getAllByRole('article').some(row => row.textContent.includes('Creator 21 · Instagram'))).toBe(true);
+    });
+    expect(screen.getAllByRole('article').some(row => row.textContent.includes('Creator 1 · Instagram'))).toBe(false);
   });
 });

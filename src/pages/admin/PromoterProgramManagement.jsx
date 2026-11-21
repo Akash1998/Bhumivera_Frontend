@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AlertCircle, Check, CheckSquare, Clipboard, Coins, Download,
-  Filter, MessageSquare, RefreshCw, Save, Search, ShieldCheck,
+  AlertCircle, Check, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clipboard, Coins, Download,
+  MessageSquare, RefreshCw, Save, Search, ShieldCheck,
   UserPlus, Users, Wallet
 } from 'lucide-react';
 import { affiliate as affiliateApi } from '../../services/api';
@@ -72,6 +72,9 @@ export default function PromoterProgramManagement() {
   const [partnerPlatformFilter, setPartnerPlatformFilter] = useState('all');
   const [partnerSort, setPartnerSort] = useState('pending_first');
   const [selectedPartnerIds, setSelectedPartnerIds] = useState([]);
+  const [partnerPage, setPartnerPage] = useState(1);
+  const [partnerPageSize, setPartnerPageSize] = useState(20);
+  const [expandedPartnerId, setExpandedPartnerId] = useState(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkRateDiscount, setBulkRateDiscount] = useState('');
   const [bulkRateShare, setBulkRateShare] = useState('');
@@ -125,6 +128,20 @@ export default function PromoterProgramManagement() {
       return (b.status === 'pending' ? 1 : 0) - (a.status === 'pending' ? 1 : 0);
     });
   }, [partners, partnerSearch, partnerStatusFilter, partnerPlatformFilter, partnerSort]);
+
+  useEffect(() => {
+    setPartnerPage(1);
+  }, [partnerSearch, partnerStatusFilter, partnerPlatformFilter, partnerSort, partnerPageSize]);
+
+  const partnerPageCount = Math.max(1, Math.ceil(filteredPartners.length / partnerPageSize));
+  const currentPartnerPage = Math.min(partnerPage, partnerPageCount);
+  const visiblePartners = filteredPartners.slice(
+    (currentPartnerPage - 1) * partnerPageSize,
+    currentPartnerPage * partnerPageSize
+  );
+  const visiblePartnerIds = visiblePartners.map(partner => partner.id);
+  const allVisiblePartnersSelected = visiblePartnerIds.length > 0 &&
+    visiblePartnerIds.every(id => selectedPartnerIds.includes(id));
 
   const filteredCommissions = useMemo(() => {
     const q = commissionSearch.trim().toLowerCase();
@@ -399,6 +416,49 @@ export default function PromoterProgramManagement() {
 
   const panelClass = 'rounded-2xl border border-[#244A38] bg-[#102219] p-5 shadow-lg';
   const inputClass = 'w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]';
+  const renderPartnerPagination = () => {
+    const first = filteredPartners.length ? (currentPartnerPage - 1) * partnerPageSize + 1 : 0;
+    const last = Math.min(currentPartnerPage * partnerPageSize, filteredPartners.length);
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 text-[#9BB0A5]">
+          <span>Showing {first}–{last} of {filteredPartners.length}</span>
+          <label className="flex items-center gap-1">
+            <span className="sr-only">Creators per page</span>
+            <select
+              aria-label="Creators per page"
+              value={partnerPageSize}
+              onChange={event => setPartnerPageSize(Number(event.target.value))}
+              className="rounded border border-[#315541] bg-[#102219] px-2 py-1 text-white"
+            >
+              {[10, 20, 50].map(size => <option key={size} value={size}>{size}/page</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[#9BB0A5]">Page {currentPartnerPage} of {partnerPageCount}</span>
+          <button
+            type="button"
+            aria-label="Previous creator page"
+            disabled={currentPartnerPage <= 1}
+            onClick={() => setPartnerPage(page => Math.max(1, page - 1))}
+            className="rounded border border-[#315541] p-1.5 text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={15}/>
+          </button>
+          <button
+            type="button"
+            aria-label="Next creator page"
+            disabled={currentPartnerPage >= partnerPageCount}
+            onClick={() => setPartnerPage(page => Math.min(partnerPageCount, page + 1))}
+            className="rounded border border-[#315541] p-1.5 text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight size={15}/>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 p-4 text-[#DFD7C4] md:p-6">
@@ -507,10 +567,14 @@ export default function PromoterProgramManagement() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedPartnerIds(selectedPartnerIds.length === filteredPartners.length ? [] : filteredPartners.map(p => p.id))}
+                  onClick={() => setSelectedPartnerIds(current => (
+                    allVisiblePartnersSelected
+                      ? current.filter(id => !visiblePartnerIds.includes(id))
+                      : Array.from(new Set([...current, ...visiblePartnerIds]))
+                  ))}
                   className="inline-flex items-center gap-1 rounded border border-[#315541] px-2.5 py-1 text-[11px] text-[#FCE096]"
                 >
-                  <CheckSquare size={12}/> {selectedPartnerIds.length === filteredPartners.length && filteredPartners.length > 0 ? 'Clear selection' : `Select visible (${filteredPartners.length})`}
+                  <CheckSquare size={12}/> {allVisiblePartnersSelected ? 'Clear page selection' : `Select page (${visiblePartners.length})`}
                 </button>
                 {selectedPartnerIds.length > 0 && (
                   <>
@@ -546,8 +610,9 @@ export default function PromoterProgramManagement() {
                   </>
                 )}
               </div>
-              <span className="text-[11px] text-[#9BB0A5]">Showing {filteredPartners.length} of {partners.length} promoters</span>
+              <span className="text-[11px] text-[#9BB0A5]">{selectedPartnerIds.length} selected across pages</span>
             </div>
+            {renderPartnerPagination()}
           </div>
         )}
 
@@ -585,87 +650,131 @@ export default function PromoterProgramManagement() {
             </button>
           </form>
         )}
-        <p className="text-xs leading-5 text-[#9BB0A5]">Save rates, promoter codes, and private admin notes per profile without changing its status. Rate changes apply to new eligible orders; existing commission records are not recalculated. Program milestone upgrades remain in effect.</p>
-        {loading ?         <p className="text-sm text-[#9BB0A5]">Loading creator accounts…</p> : filteredPartners.length === 0 ? (
-            <p className="text-sm text-[#9BB0A5]">No creators match the current filter. Click <strong className="text-white">Add creator</strong> to onboard one now, or ask them to sign in and apply on the public creator page.</p>
+        <p className="text-xs leading-5 text-[#9BB0A5]">Compact creator rows keep the queue scannable. Open a row to review the application or edit promo settings; rate changes apply to new eligible orders only.</p>
+        {loading ? <p className="text-sm text-[#9BB0A5]">Loading creator accounts…</p> : filteredPartners.length === 0 ? (
+          <p className="text-sm text-[#9BB0A5]">No creators match the current filter. Click <strong className="text-white">Add creator</strong> to onboard one now, or ask them to sign in and apply on the public creator page.</p>
         ) : (
-          <div className="space-y-3">
-            {filteredPartners.map(partner => (
-              <article key={partner.id} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    {partners.length > 1 && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Select promoter ${partner.user_name || partner.id}`}
-                        checked={selectedPartnerIds.includes(partner.id)}
-                        onChange={() => togglePartnerSelect(partner.id)}
-                        className="mt-1 h-4 w-4 accent-[#D4AF37]"
-                      />
-                    )}
-                    <div>
-                      <h3 className="font-semibold text-white">{partner.user_name} <span className="font-normal text-[#9BB0A5]">· {partner.social_platform} / {partner.social_handle}</span></h3>
-                      <p className="mt-1 text-xs text-[#9BB0A5]">
-                        {partner.user_email} · {AUDIENCE_TIERS[partner.follower_tier] || `${Number(partner.follower_count).toLocaleString()} followers`}
-                        {partner.content_niche ? ` · ${partner.content_niche}` : ''}
-                        {partner.collaboration_type ? ` · ${COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type}` : ''}
-                        {partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}
-                      </p>
-                      {partner.partnership_intent && (
-                        <p className="mt-2 max-w-3xl rounded-lg border border-[#315541] bg-black/10 p-3 text-xs leading-5 text-[#C5D8CC]">
-                          <strong className="text-[#FCE096]">Partnership intent:</strong> {partner.partnership_intent}
+          <>
+            <div className="space-y-2">
+              {visiblePartners.map(partner => {
+                const expanded = expandedPartnerId === partner.id;
+                const statusClass = partner.status === 'approved'
+                  ? 'bg-emerald-900/50 text-emerald-200'
+                  : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]';
+                return (
+                  <article key={partner.id} className="rounded-xl border border-[#315541] bg-[#0b1c14] px-3 py-2.5">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      {partners.length > 1 && (
+                        <input
+                          type="checkbox"
+                          aria-label={`Select promoter ${partner.user_name || partner.id}`}
+                          checked={selectedPartnerIds.includes(partner.id)}
+                          onChange={() => togglePartnerSelect(partner.id)}
+                          className="h-4 w-4 accent-[#D4AF37]"
+                        />
+                      )}
+                      <div className="min-w-[220px] flex-1">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {partner.user_name || 'Creator'}
+                          <span className="font-normal text-[#9BB0A5]"> · {partner.social_platform} / {partner.social_handle}</span>
                         </p>
-                      )}
-                      {(partner.preferred_products || partner.content_formats || partner.payout_upi_id || partner.whatsapp_contact) && (
-                        <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#9BB0A5]">
-                          {partner.preferred_products && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">Products: <strong className="text-white">{partner.preferred_products}</strong></span>}
-                          {partner.content_formats && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">Formats: <strong className="text-white">{partner.content_formats}</strong></span>}
-                          {partner.payout_upi_id && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">UPI: <strong className="text-[#FCE096]">{partner.payout_upi_id}</strong></span>}
-                          {partner.whatsapp_contact && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">WhatsApp: <strong className="text-white">{partner.whatsapp_contact}</strong></span>}
-                        </div>
-                      )}
-                      <p className="mt-1 text-xs text-[#9BB0A5]">Attributed orders: {Number(partner.pending_orders || 0)} pending · Payable {money(partner.payable_amount)} · Paid {money(partner.paid_amount)}</p>
+                        <p className="truncate text-[11px] text-[#9BB0A5]">
+                          {partner.user_email} · {AUDIENCE_TIERS[partner.follower_tier] || `${Number(partner.follower_count).toLocaleString()} followers`}
+                          {partner.content_niche ? ` · ${partner.content_niche}` : ''}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${statusClass}`}>{partner.status}</span>
+                      <span className="rounded-md border border-[#315541] px-2 py-1 font-mono text-[11px] text-[#FCE096]">
+                        {partner.referral_code || 'No code'}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#9BB0A5]">
+                        <span>{Number(partner.pending_orders || 0)} pending</span>
+                        <span>Payable <strong className="text-[#FCE096]">{money(partner.payable_amount)}</strong></span>
+                        <span>Paid <strong className="text-white">{money(partner.paid_amount)}</strong></span>
+                      </div>
+                      <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                        {partner.status !== 'approved' && (
+                          <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="rounded-lg bg-emerald-700 px-2.5 py-1.5 text-[11px] font-bold text-white disabled:opacity-50">
+                            <Check size={13} className="mr-1 inline"/>Approve
+                          </button>
+                        )}
+                        {partner.status !== 'rejected' && partner.status !== 'approved' && (
+                          <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'rejected')} className="rounded-lg border border-rose-400/30 px-2.5 py-1.5 text-[11px] text-rose-200 disabled:opacity-50">Reject</button>
+                        )}
+                        {partner.status === 'approved' && (
+                          <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'paused')} className="rounded-lg border border-amber-400/30 px-2.5 py-1.5 text-[11px] text-amber-100 disabled:opacity-50">Pause</button>
+                        )}
+                        {partner.status === 'paused' && (
+                          <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="rounded-lg border border-emerald-400/30 px-2.5 py-1.5 text-[11px] text-emerald-100 disabled:opacity-50">Resume</button>
+                        )}
+                        <button
+                          type="button"
+                          aria-expanded={expanded}
+                          aria-label={`${expanded ? 'Hide' : 'Show'} details for ${partner.user_name || 'creator'}`}
+                          onClick={() => setExpandedPartnerId(expanded ? null : partner.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-[#315541] px-2.5 py-1.5 text-[11px] text-[#FCE096] hover:border-[#D4AF37]"
+                        >
+                          {expanded ? 'Close' : 'Details & edit'}
+                          {expanded ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]'}`}>{partner.status}</span>
-                </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Customer promo discount %
-                    <input type="number" min="0" max="60" step="0.1" value={partner.discount_percent ?? config.default_customer_discount_percent} onChange={event => updatePartnerField(partner.id, 'discount_percent', event.target.value)} className={inputClass}/>
-                  </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Contribution share %
-                    <input type="number" min="0" max="100" step="0.1" value={partner.commission_share_percent ?? config.default_commission_share_percent} onChange={event => updatePartnerField(partner.id, 'commission_share_percent', event.target.value)} className={inputClass}/>
-                  </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Creator promo code
-                    <input value={partner.referral_code || ''} onChange={event => updatePartnerField(partner.id, 'referral_code', event.target.value.toUpperCase())} placeholder="Generated when approved" className={inputClass}/>
-                  </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Total promo uses <span className="font-normal">(blank = unlimited)</span>
-                    <input type="number" min="1" max="1000000" step="1" value={partner.promo_usage_limit ?? ''} onChange={event => updatePartnerField(partner.id, 'promo_usage_limit', event.target.value)} placeholder="Unlimited" className={inputClass}/>
-                  </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Uses per customer <span className="font-normal">(0 = unlimited)</span>
-                    <input type="number" min="0" max="1000000" step="1" value={partner.promo_per_user_limit ?? 1} onChange={event => updatePartnerField(partner.id, 'promo_per_user_limit', event.target.value)} className={inputClass}/>
-                  </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Private admin notes
-                    <textarea rows="2" maxLength="1000" value={partner.admin_notes || ''} onChange={event => updatePartnerField(partner.id, 'admin_notes', event.target.value)} className={`${inputClass} resize-y`}/>
-                  </label>
-                </div>
-                <p className="mt-2 text-[11px] text-[#9BB0A5]">
-                  Promo uses: {Number(partner.promo_used_count || 0).toLocaleString()}
-                  {partner.promo_usage_limit ? ` of ${Number(partner.promo_usage_limit).toLocaleString()}` : ' · no total limit'}
-                  {partner.promo_usage_limit ? ` · ${Math.max(0, Number(partner.promo_usage_limit) - Number(partner.promo_used_count || 0)).toLocaleString()} remaining` : ''}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" disabled={busyPartner === partner.id} onClick={() => savePartner(partner)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219] disabled:opacity-50"><Save size={14}/>{busyPartner === partner.id ? 'Saving…' : 'Save changes'}</button>
-                  {partner.status !== 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"><Check size={14}/>Approve</button>}
-                  {partner.status !== 'rejected' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'rejected')} className="rounded-lg border border-rose-400/30 px-3 py-2 text-xs font-semibold text-rose-200 disabled:opacity-50">Reject</button>}
-                  {partner.status === 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'paused')} className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-100 disabled:opacity-50">Pause</button>}
-                  {partner.status === 'paused' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="rounded-lg border border-emerald-400/30 px-3 py-2 text-xs font-semibold text-emerald-100 disabled:opacity-50">Resume</button>}
-                  {partner.referral_code && <button type="button" onClick={() => copyText(`${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#FCE096]"><Clipboard size={13}/>Copy promo link</button>}
-                  <button type="button" onClick={() => copyWelcomeMessage(partner)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#C5D8CC] hover:border-[#D4AF37]"><MessageSquare size={13}/>Copy creator welcome</button>
-                </div>
-              </article>
-            ))}
-          </div>
+
+                    {expanded && (
+                      <div className="mt-3 space-y-3 border-t border-[#244A38] pt-3">
+                        <div className="grid gap-2 text-xs text-[#9BB0A5] md:grid-cols-2">
+                          <div className="space-y-1">
+                            {partner.partnership_intent && <p className="rounded-lg border border-[#315541] bg-black/10 p-2.5 leading-5"><strong className="text-[#FCE096]">Partnership intent:</strong> {partner.partnership_intent}</p>}
+                            <p>{partner.collaboration_type ? COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type : 'Collaboration preference not specified'}</p>
+                            {partner.profile_url && <a href={partner.profile_url} target="_blank" rel="noreferrer" className="inline-block text-[#FCE096] underline">Open creator profile</a>}
+                          </div>
+                          <div className="flex flex-wrap content-start gap-2">
+                            {partner.preferred_products && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-1">Products: <strong className="text-white">{partner.preferred_products}</strong></span>}
+                            {partner.content_formats && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-1">Formats: <strong className="text-white">{partner.content_formats}</strong></span>}
+                            {partner.payout_upi_id && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-1">UPI: <strong className="text-[#FCE096]">{partner.payout_upi_id}</strong></span>}
+                            {partner.whatsapp_contact && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-1">WhatsApp: <strong className="text-white">{partner.whatsapp_contact}</strong></span>}
+                            <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-1">Promo uses: <strong className="text-white">{Number(partner.promo_used_count || 0).toLocaleString()}</strong>
+                              {partner.promo_usage_limit ? ` / ${Number(partner.promo_usage_limit).toLocaleString()} (${Math.max(0, Number(partner.promo_usage_limit) - Number(partner.promo_used_count || 0)).toLocaleString()} left)` : ' · unlimited'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Customer promo discount %
+                            <input type="number" min="0" max="60" step="0.1" value={partner.discount_percent ?? config.default_customer_discount_percent} onChange={event => updatePartnerField(partner.id, 'discount_percent', event.target.value)} className={inputClass}/>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Contribution share %
+                            <input type="number" min="0" max="100" step="0.1" value={partner.commission_share_percent ?? config.default_commission_share_percent} onChange={event => updatePartnerField(partner.id, 'commission_share_percent', event.target.value)} className={inputClass}/>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Creator promo code
+                            <input value={partner.referral_code || ''} onChange={event => updatePartnerField(partner.id, 'referral_code', event.target.value.toUpperCase())} placeholder="Generated when approved" className={inputClass}/>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Total promo uses <span className="font-normal">(blank = unlimited)</span>
+                            <input type="number" min="1" max="1000000" step="1" value={partner.promo_usage_limit ?? ''} onChange={event => updatePartnerField(partner.id, 'promo_usage_limit', event.target.value)} placeholder="Unlimited" className={inputClass}/>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Uses per customer <span className="font-normal">(0 = unlimited)</span>
+                            <input type="number" min="0" max="1000000" step="1" value={partner.promo_per_user_limit ?? 1} onChange={event => updatePartnerField(partner.id, 'promo_per_user_limit', event.target.value)} className={inputClass}/>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Private admin notes
+                            <textarea rows="2" maxLength="1000" value={partner.admin_notes || ''} onChange={event => updatePartnerField(partner.id, 'admin_notes', event.target.value)} className={`${inputClass} resize-y`}/>
+                          </label>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-[11px] text-[#9BB0A5]">Rate changes apply to new orders; existing commission records are not recalculated.</p>
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" disabled={busyPartner === partner.id} onClick={() => savePartner(partner)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219] disabled:opacity-50"><Save size={14}/>{busyPartner === partner.id ? 'Saving…' : 'Save changes'}</button>
+                            {partner.referral_code && <button type="button" onClick={() => copyText(`${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#FCE096]"><Clipboard size={13}/>Copy promo link</button>}
+                            <button type="button" onClick={() => copyWelcomeMessage(partner)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#C5D8CC] hover:border-[#D4AF37]"><MessageSquare size={13}/>Copy creator welcome</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+            <div className="border-t border-[#244A38] pt-3">{renderPartnerPagination()}</div>
+          </>
         )}
       </section>
 
