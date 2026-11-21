@@ -70,6 +70,29 @@ describe('active combo showcase', () => {
     expect(screen.queryByText('Old name')).toBeNull();
   });
 
+  it('uses the combo image when the images list is empty', async () => {
+    products.getAllActive.mockResolvedValue({
+      data: {
+        data: [{
+          id: 21,
+          name: 'Creators Combo',
+          image_url: null,
+          images: [],
+          image: 'products/creators-combo.webp',
+          specifications: {
+            is_combo: true,
+            combo_items: [{ product_id: 7, name: 'Face Wash' }, { product_id: 8, name: 'Soap' }],
+          },
+        }],
+      },
+    });
+
+    render(<MemoryRouter><ActiveComboShowcase /></MemoryRouter>);
+
+    const image = await screen.findByRole('img', { name: 'Creators Combo' });
+    expect(image.getAttribute('src')).toMatch(/\/products\/creators-combo\.webp$/);
+  });
+
   it('defers homepage catalog loading until the showcase approaches the viewport', async () => {
     let intersectionCallback;
     class MockIntersectionObserver {

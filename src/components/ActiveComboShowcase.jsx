@@ -14,6 +14,15 @@ const money = value => Number(value || 0).toLocaleString('en-IN', {
   maximumFractionDigits: 2,
 });
 
+const getComboImageUrl = combo => {
+  const imageCandidates = [
+    combo.image_url,
+    ...(Array.isArray(combo.images) ? combo.images : [combo.images]),
+    combo.image,
+  ];
+  return imageCandidates.map(getProductImageUrl).find(Boolean) || null;
+};
+
 export default function ActiveComboShowcase({ variant = 'shop' }) {
   const sectionRef = useRef(null);
   const [combos, setCombos] = useState([]);
@@ -106,7 +115,7 @@ export default function ActiveComboShowcase({ variant = 'shop' }) {
             const comboPath = getComboPath(combo);
             const price = getComboPrice(combo);
             const regularPrice = Number(combo.price) || 0;
-            const imageUrl = getProductImageUrl(combo.image_url || combo.images || combo.image);
+            const imageUrl = getComboImageUrl(combo);
             return (
               <article
                 key={combo.id ?? combo._id ?? comboPath}
